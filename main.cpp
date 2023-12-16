@@ -1,5 +1,8 @@
 #include <iostream>
 
+#include "color.h"
+#include "vec3.h"
+
 int main() {
 
     int image_width = 256;
@@ -13,20 +16,14 @@ int main() {
         // Progress bar
         std::clog << "\rScanlines Remaining: " << (image_height - row) << " " << std::flush;
         for (int col = 0; col < image_width; ++col) {
-            // r increases left to right, green increases top to bottom: ratio from 0.0-1.0
-            float r = double(col) / (image_width-1);
-            float g = double(row) / (image_height-1);
-            float b = 0;
+            // r increases left to right, g increases top to bottom: ratio of current place to image size
+            auto pixel_color = color(double(col)/(image_width-1), double(row)/(image_height-1), 0);
 
-            // essentially rounding to nearest int 0-255
-            int ir = int(r * 255);
-            int ig = int(g * 255);
-            int ib = int(b * 255);
-
-            std::cout << ir << " " << ig << " " << ib << '\n';
+            write_color(std::cout, pixel_color);
         }
     }
-    std::clog << "\rDone.\n";
+    // enough blank space to clear out previous message
+    std::clog << "\rDone.                 \n";
 
     return 0;
 }
