@@ -7,8 +7,10 @@ class ray {
 public:
     // constructors
     ray() {}
+    // initializer lists
     ray(const point3& origin, const vec3& direction) : orig(origin), dir(direction) {}
 
+    // getters
     point3 origin() const { return orig; }
     vec3 direction() const { return dir; }
 
