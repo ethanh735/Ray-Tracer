@@ -50,7 +50,7 @@ public:
 
     // different implementation from book
     double length() const {
-        return e[0] + e[1] + e[2];
+        return sqrt(length_squared());
     }
 
     double length_squared() const {
