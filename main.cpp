@@ -2,7 +2,19 @@
 #include "ray.h"
 #include "vec3.h"
 
+bool hit_sphere(const point3& center, double radius, const ray& r) {
+    vec3 oc = r.origin() - center;
+    auto a = dot(r.direction(), r.direction());
+    auto b = 2.0 * dot(oc, r.direction());
+    auto c = dot(oc, oc) - radius*radius;
+    auto discriminant = b*b - 4*a*c;
+    return (discriminant >= 0);
+}
+
 color ray_color(const ray& r) {
+    if (hit_sphere(point3(0,0,-1), 0.5, r))
+        return color(1, 0, 0);
+
     // normalized value of calculated ray direction between camera and viewport intersection: 1, -1, or 0
     vec3 unit_direction = unit_vector(r.direction());
 
@@ -16,15 +28,15 @@ int main() {
 
     // Given width and aspect ratio, calculate image height (at least 1)
     auto aspect_ratio = 16.0 / 9.0;
-    int image_width = 1200;
+    int image_width = 400;
     int image_height = (int)(image_width / aspect_ratio);
 
     if (image_height < 1) { image_height = 1; }
 
     // Viewport Calculation:
-    auto focal_length = 1.0;                                                        // distance between viewport and camera center
-    auto viewport_height = 2.0;                                                     // arbitrary
-    auto viewport_width = viewport_height * ((double)(image_width)/image_height);   // recalculation of aspect ratio based on approximated values
+    auto focal_length = 1.0;                                                            // distance between viewport and camera center
+    auto viewport_height = 2.0;                                                         // arbitrary
+    auto viewport_width = viewport_height * ((double)(image_width)/image_height);       // recalculation of aspect ratio based on approximated values
     auto camera_center = point3(0, 0, 0);                                           // zeroed for simplicity
 
     // Calculate vectors across viewport edges: viewport size per edge
