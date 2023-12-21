@@ -2,19 +2,37 @@
 #include "ray.h"
 #include "vec3.h"
 
-bool hit_sphere(const point3& center, double radius, const ray& r) {
-    vec3 oc = r.origin() - center;
-    auto a = dot(r.direction(), r.direction());
-    auto b = 2.0 * dot(oc, r.direction());
-    auto c = dot(oc, oc) - radius*radius;
+// Given a sphere of some size and position, calculate ray intersections using quadratic formula
+double hit_sphere(const point3& center, double radius, const ray& r) {
+    vec3 oc = r.origin() - center;                                // center of the sphere: A - C
+    auto a = dot(r.direction(), r.direction());     // b^2
+    auto b = 2.0 * dot(oc, r.direction());          // 2b * (A - C)
+    auto c = dot(oc, oc) - radius*radius;           // (A - C)^2 - r^2
+    // quadratic formula part under root: returns negative (no intersect), 0 (1 intersect), or positive (2 intersect)
     auto discriminant = b*b - 4*a*c;
-    return (discriminant >= 0);
+
+    // normal calculation: returns where intersection is
+    if (discriminant < 0) {
+        return -1.0;
+    }
+    else {
+        // full quadratic formula: negative side is entry point of sphere, positive part is exit point (for refraction)
+        return (-b - sqrt(discriminant) ) / (2.0*a);
+    }
 }
 
+// Given ray position, calculate color of each pixel across screen
 color ray_color(const ray& r) {
-    if (hit_sphere(point3(0,0,-1), 0.5, r))
-        return color(1, 0, 0);
+    // sphere intersections
+    auto t = hit_sphere(point3(0,0,-1), 0.5, r);
+    // if intersection, generate normal
+    if (t > 0.0) {
+        vec3 N = unit_vector(r.at(t) - vec3(0,0,-1));
+        // arbitrary color map
+        return 0.5*color(N.x()+1, N.y()+1, N.z()+1);
+    }
 
+    // blue to white background lerp:
     // normalized value of calculated ray direction between camera and viewport intersection: 1, -1, or 0
     vec3 unit_direction = unit_vector(r.direction());
 
