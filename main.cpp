@@ -4,12 +4,12 @@
 
 // Given a sphere of some size and position, calculate ray intersections using quadratic formula
 double hit_sphere(const point3& center, double radius, const ray& r) {
-    vec3 oc = r.origin() - center;                                // center of the sphere: A - C
-    auto a = dot(r.direction(), r.direction());     // b^2
-    auto b = 2.0 * dot(oc, r.direction());          // 2b * (A - C)
-    auto c = dot(oc, oc) - radius*radius;           // (A - C)^2 - r^2
+    vec3 oc = r.origin() - center;                                  // camera center - sphere center: A - C
+    auto a = r.direction().length_squared();                // b^2
+    auto half_b = dot(oc, r.direction());             // b * (A - C)
+    auto c = oc.length_squared() - radius*radius;           // (A - C)^2 - r^2
     // quadratic formula part under root: returns negative (no intersect), 0 (1 intersect), or positive (2 intersect)
-    auto discriminant = b*b - 4*a*c;
+    auto discriminant = half_b*half_b - 4*a*c;
 
     // normal calculation: returns where intersection is
     if (discriminant < 0) {
@@ -17,7 +17,7 @@ double hit_sphere(const point3& center, double radius, const ray& r) {
     }
     else {
         // full quadratic formula: negative side is entry point of sphere, positive part is exit point (for refraction)
-        return (-b - sqrt(discriminant) ) / (2.0*a);
+        return (-half_b - sqrt(discriminant) ) / a;
     }
 }
 
@@ -27,8 +27,9 @@ color ray_color(const ray& r) {
     auto t = hit_sphere(point3(0,0,-1), 0.5, r);
     // if intersection, generate normal
     if (t > 0.0) {
+        // P - C: normalized normal
         vec3 N = unit_vector(r.at(t) - vec3(0,0,-1));
-        // arbitrary color map
+        // arbitrary color map based on normal xyz
         return 0.5*color(N.x()+1, N.y()+1, N.z()+1);
     }
 
@@ -75,7 +76,7 @@ int main() {
 
     // Image Rendering
     for (int row = 0; row < image_height; ++row) {
-        // Progress bar
+        // Progress indicator
         std::clog << "\rScanlines Remaining: " << (image_height - row) << " " << std::flush;
         for (int col = 0; col < image_width; ++col) {
             // current pixel placement on viewport relative to offset top left corner
