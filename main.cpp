@@ -23,7 +23,7 @@ double hit_sphere(const point3& center, double radius, const ray& r) {
 
 // Given ray position, calculate color of each pixel across screen
 color ray_color(const ray& r) {
-    // sphere intersections
+    // sphere intersections:
     auto t = hit_sphere(point3(0,0,-1), 0.5, r);
     // if intersection, generate normal
     if (t > 0.0) {
@@ -55,7 +55,7 @@ int main() {
     // Viewport Calculation:
     auto focal_length = 1.0;                                                            // distance between viewport and camera center
     auto viewport_height = 2.0;                                                         // arbitrary
-    auto viewport_width = viewport_height * ((double)(image_width)/image_height);       // recalculation of aspect ratio based on approximated values
+    auto viewport_width = viewport_height * (double)(image_width/image_height);         // recalculation of aspect ratio based on approximated values
     auto camera_center = point3(0, 0, 0);                                           // zeroed for simplicity
 
     // Calculate vectors across viewport edges: viewport size per edge
@@ -93,6 +93,5 @@ int main() {
     }
     // enough blank space to clear out previous message
     std::clog << "\rDone.                 \n";
-
     return 0;
 }

@@ -9,6 +9,16 @@ public:
     point3 p;
     vec3 normal;
     double t;
+    bool front_face;
+
+    // given intersection ray and surface normal, flip the normal if it is facing along the ray (exit points)
+    // normal is assumed to be a unit vector
+    void set_face_normal(const ray& r, const vec3& outward_normal) {
+        // if any axis is opposite, product will be negative
+        front_face = (dot(r.direction(), outward_normal) < 0);
+        // flip normal if product is positive (ray & normal facing same direction)
+        normal = front_face ? outward_normal : -outward_normal;
+    }
 };
 
 class hittable {
