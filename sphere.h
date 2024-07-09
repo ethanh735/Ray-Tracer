@@ -2,7 +2,6 @@
 #define SPHERE_H
 
 #include "hittable.h"
-#include "vec3.h"
 
 class sphere : public hittable {
 public:
@@ -12,24 +11,25 @@ public:
     // defines ray intersection function according to quadratic formula
     bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const override {
         // quadratic formula components
-        vec3 oc = r.origin() - center;
-        auto a = r.direction().length_squared();
-        auto half_b = dot(oc, r.direction());
-        auto c = oc.length_squared() - radius*radius;
+        vec3 oc = center - r.origin();                          // sphere center - camera center: A - C
+        auto a = r.direction().length_squared();                // b^2
+        auto half_b = dot(r.direction(), oc);                   // b * (A - C)
+        auto c = oc.length_squared() - radius*radius;           // (A - C)^2 - r^2
 
+        // quadratic formula part under root: returns negative (no intersect), 0 (1 intersect), or positive (2 intersect)
         // sqrt(4) = 2, equation has been /2, so b^2 - ac
         auto discriminant = half_b*half_b - a*c;
         if (discriminant < 0) return false;
 
-        auto sqrtd = sqrt(discriminant);
+        auto sqrt_d = sqrt(discriminant);
 
         // half of quadratic formula: simplifies multiplication slightly by removing factor
         // negative side (ray entry point)
-        auto root = (-half_b - sqrtd) / a;
+        auto root = (half_b - sqrt_d) / a;
 
         // find the nearest root that lies in the t-value range
         if (root <= ray_tmin || ray_tmax <= root) {
-            root = (-half_b + sqrtd) / a;
+            root = (half_b + sqrt_d) / a;
             // check positive side (ray exit point) after negative
             if (root <= ray_tmin || ray_tmax <= root) {
                 return false;

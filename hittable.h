@@ -1,7 +1,6 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
-#include "ray.h"
 
 // Bundle of data per ray intersection
 class hit_record {
@@ -16,7 +15,7 @@ public:
     void set_face_normal(const ray& r, const vec3& outward_normal) {
         // if any axis is opposite, product will be negative
         front_face = (dot(r.direction(), outward_normal) < 0);
-        // flip normal if product is positive (ray & normal facing same direction)
+        // flip normal if product is positive (ray & normal facing same direction): normal always facing opposite ray (both entry & exit points)
         normal = front_face ? outward_normal : -outward_normal;
     }
 };

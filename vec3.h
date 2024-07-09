@@ -1,10 +1,7 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include <cmath>
-#include <iostream>
 
-using std::sqrt;
 
 // General class used for vectors, points, colors, etc.
 class vec3 {
@@ -48,7 +45,6 @@ public:
         return *this *= 1/t;
     }
 
-    // different implementation from book
     double length() const {
         return sqrt(length_squared());
     }
@@ -89,19 +85,22 @@ inline vec3 operator*(const vec3& v, double t) {
     return t * v;
 }
 
-// different syntax for division
 inline vec3 operator/(vec3 v, double t) {
     return (1/t) * v;
 }
 
 // dot product
 inline double dot(const vec3& u, const vec3& v) {
-    return u.e[0]*v.e[0] + u.e[1]*v.e[1] + u.e[2]*v.e[2];
+    return u.e[0]*v.e[0]
+        + u.e[1]*v.e[1]
+        + u.e[2]*v.e[2];
 }
 
 // cross product
 inline vec3 cross(const vec3& u, const vec3& v) {
-    return vec3(u.e[1]*v.e[2] - u.e[2]*v.e[1], u.e[2]*v.e[0] - u.e[0]*v.e[2], u.e[0]*v.e[1] - u.e[1]*v.e[0]);
+    return vec3(u.e[1]*v.e[2] - u.e[2]*v.e[1],
+                u.e[2]*v.e[0] - u.e[0]*v.e[2],
+                u.e[0]*v.e[1] - u.e[1]*v.e[0]);
 }
 
 inline vec3 unit_vector(vec3 v) {

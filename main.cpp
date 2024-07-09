@@ -1,36 +1,15 @@
-#include "color.h"
-#include "ray.h"
-#include "vec3.h"
+#include "rtweekend.h"
 
-// Given a sphere of some size and position, calculate ray intersections using quadratic formula
-double hit_sphere(const point3& center, double radius, const ray& r) {
-    vec3 oc = r.origin() - center;                                  // camera center - sphere center: A - C
-    auto a = r.direction().length_squared();                // b^2
-    auto half_b = dot(oc, r.direction());             // b * (A - C)
-    auto c = oc.length_squared() - radius*radius;           // (A - C)^2 - r^2
-    // quadratic formula part under root: returns negative (no intersect), 0 (1 intersect), or positive (2 intersect)
-    auto discriminant = half_b*half_b - 4*a*c;
-
-    // normal calculation: returns where intersection is
-    if (discriminant < 0) {
-        return -1.0;
-    }
-    else {
-        // full quadratic formula: negative side is entry point of sphere, positive part is exit point (for refraction)
-        return (-half_b - sqrt(discriminant) ) / a;
-    }
-}
+#include "hittable.h"
+#include "hittable_list.h"
+#include "sphere.h"
 
 // Given ray position, calculate color of each pixel across screen
-color ray_color(const ray& r) {
-    // sphere intersections:
-    auto t = hit_sphere(point3(0,0,-1), 0.5, r);
-    // if intersection, generate normal
-    if (t > 0.0) {
-        // P - C: normalized normal
-        vec3 N = unit_vector(r.at(t) - vec3(0,0,-1));
-        // arbitrary color map based on normal xyz
-        return 0.5*color(N.x()+1, N.y()+1, N.z()+1);
+color ray_color(const ray& r, const hittable& world) {
+    hit_record rec;
+    // for given hittable, if hit (according to what hittable is), return color map value
+    if (world.hit(r, 0, infinity, rec)) {
+        return 0.5 * (rec.normal + color(1,1,1));
     }
 
     // blue to white background lerp:
@@ -51,6 +30,12 @@ int main() {
     int image_height = (int)(image_width / aspect_ratio);
 
     if (image_height < 1) { image_height = 1; }
+
+    // Environment Setup
+    hittable_list world;
+
+    world.add(make_shared<sphere>(point3(0,0,-1), 0.5));        // rgb sphere
+    world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));   // plane sphere
 
     // Viewport Calculation:
     auto focal_length = 1.0;                                                            // distance between viewport and camera center
@@ -87,7 +72,7 @@ int main() {
             // cast ray
             ray r(camera_center, ray_direction);
 
-            color pixel_color = ray_color(r);
+            color pixel_color = ray_color(r, world);
             write_color(std::cout, pixel_color);
         }
     }

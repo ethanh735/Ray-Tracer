@@ -3,12 +3,12 @@
 
 #include "hittable.h"
 
-#include <memory>
 #include <vector>
 
 // list of hittable objects of any kind
 class hittable_list : public hittable {
 public:
+    // shared pointers: pointers that keep track of reference count (assignment increases, leaving scope decreases): group of objects shares it
     std::vector<shared_ptr<hittable>> objects;
 
     // constructors
