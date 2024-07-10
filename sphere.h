@@ -2,11 +2,12 @@
 #define SPHERE_H
 
 #include "hittable.h"
+#include "vec3.h"
 
 class sphere : public hittable {
 public:
     // constructor
-    sphere(point3 _center, double _radius) : center(_center), radius(_radius) {}
+    sphere(const point3& _center, double _radius) : center(_center), radius(fmax(0, _radius)) {}
 
     // defines ray intersection function according to quadratic formula
     bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const override {
@@ -14,7 +15,7 @@ public:
         vec3 oc = center - r.origin();                          // sphere center - camera center: A - C
         auto a = r.direction().length_squared();                // b^2
         auto half_b = dot(r.direction(), oc);                   // b * (A - C)
-        auto c = oc.length_squared() - radius*radius;           // (A - C)^2 - r^2
+        auto c = oc.length_squared() - radius*radius;   // (A - C)^2 - r^2
 
         // quadratic formula part under root: returns negative (no intersect), 0 (1 intersect), or positive (2 intersect)
         // sqrt(4) = 2, equation has been /2, so b^2 - ac

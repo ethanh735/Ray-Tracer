@@ -27,7 +27,7 @@ int main() {
     // Given width and aspect ratio, calculate image height (at least 1)
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
-    int image_height = (int)(image_width / aspect_ratio);
+    int image_height = int(image_width / aspect_ratio);
 
     if (image_height < 1) { image_height = 1; }
 
@@ -40,7 +40,7 @@ int main() {
     // Viewport Calculation:
     auto focal_length = 1.0;                                                            // distance between viewport and camera center
     auto viewport_height = 2.0;                                                         // arbitrary
-    auto viewport_width = viewport_height * (double)(image_width/image_height);         // recalculation of aspect ratio based on approximated values
+    auto viewport_width = viewport_height * (double(image_width)/image_height);         // recalculation of aspect ratio based on approximated values: both image width and height are ints, division result must be double
     auto camera_center = point3(0, 0, 0);                                           // zeroed for simplicity
 
     // Calculate vectors across viewport edges: viewport size per edge
