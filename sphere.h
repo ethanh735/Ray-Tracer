@@ -10,7 +10,7 @@ public:
     sphere(const point3& _center, double _radius) : center(_center), radius(fmax(0, _radius)) {}
 
     // defines ray intersection function according to quadratic formula
-    bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const override {
+    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
         // quadratic formula components
         vec3 oc = center - r.origin();                          // sphere center - camera center: A - C
         auto a = r.direction().length_squared();                // b^2
@@ -29,10 +29,10 @@ public:
         auto root = (half_b - sqrt_d) / a;
 
         // find the nearest root that lies in the t-value range
-        if (root <= ray_tmin || ray_tmax <= root) {
+        if (!ray_t.surrounds(root)) {
             root = (half_b + sqrt_d) / a;
             // check positive side (ray exit point) after negative
-            if (root <= ray_tmin || ray_tmax <= root) {
+            if (!ray_t.surrounds(root)) {
                 return false;
             }
         }
