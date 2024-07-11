@@ -13,12 +13,21 @@ public:
         return max - min;
     }
 
+    // returns true if x is within interval (inclusive)
     bool contains(double x) const {
         return min <= x && x <= max;
     }
 
+    // returns true if x is within interval (exclusive)
     bool surrounds(double x) const {
         return min < x && x < max;
+    }
+
+    // doesn't return x if outside interval
+    double clamp(double x) const {
+        if (x < min) return min;
+        if (x > max) return max;
+        return x;
     }
 
     static const interval empty, universe;

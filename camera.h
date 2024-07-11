@@ -10,6 +10,7 @@ public:
     // default values
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
+    int samples_per_pixel = 10;
 
     // renders image pixel by pixel
     void render(const hittable& world) {
@@ -23,16 +24,15 @@ public:
             // Progress indicator
             std::clog << "\rScanlines Remaining: " << (image_height - row) << " " << std::flush;
             for (int col = 0; col < image_width; ++col) {
-                // current pixel placement on viewport relative to offset top left corner
-                auto pixel_center = pixel00_loc + (col * pixel_delta_u) + (row * pixel_delta_v);
-                // exacting vector between current viewport position and camera
-                auto ray_direction = pixel_center - center;
-
-                // cast ray
-                ray r(center, ray_direction);
-
-                color pixel_color = ray_color(r, world);
-                write_color(std::cout, pixel_color);
+                color pixel_color(0,0,0);
+                // cast multiple rays per pixel, getting a slightly different sample surrounding pixel each time
+                for (int sample = 0; sample < samples_per_pixel; sample++) {
+                    ray r = get_ray(col, row);
+                    // total the sample rays collected
+                    pixel_color += ray_color(r, world);
+                }
+                // divide total sampling by the number of samples
+                write_color(std::cout, pixel_samples_scale * pixel_color);
             }
         }
         // enough blank space to clear out previous message
@@ -40,16 +40,20 @@ public:
     }
 
 private:
-    int    image_height;   // Rendered image height
-    point3 center;         // Camera center
-    point3 pixel00_loc;    // Location of pixel 0, 0
-    vec3   pixel_delta_u;  // Offset to pixel to the right
-    vec3   pixel_delta_v;  // Offset to pixel below
+    int    image_height;         // Rendered image height
+    double pixel_samples_scale;  // Color scale factor for a sum of pixel samples
+    point3 center;               // Camera center
+    point3 pixel00_loc;          // Location of pixel 0, 0
+    vec3   pixel_delta_u;        // Offset to pixel to the right
+    vec3   pixel_delta_v;        // Offset to pixel below
 
     void initialize() {
         // Given width and aspect ratio, calculate image height (at least 1)
         image_height = int(image_width / aspect_ratio);
         if (image_height < 1) { image_height = 1; }
+
+        // pixels per sample
+        pixel_samples_scale = 1.0 / samples_per_pixel;
 
         // Viewport Calculation:
         auto focal_length = 1.0;                                                            // distance between viewport and camera center
@@ -72,7 +76,29 @@ private:
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     }
 
-// Given ray position, calculate color of each pixel across screen
+    // Construct a camera ray originating from the origin and directed at randomly sample point around the pixel location i, j.
+    ray get_ray(int i, int j) const {
+        // generates a sample within a square of size -0.5,0.5
+        auto offset = sample_square();
+        // current pixel placement on viewport relative to offset top left corner, considering slight offset
+        auto pixel_sample = pixel00_loc
+                            + ((i + offset.x()) * pixel_delta_u)
+                            + ((j + offset.y()) * pixel_delta_v);
+
+        // exacting vector between current viewport position and camera
+        auto ray_origin = center;
+        auto ray_direction = pixel_sample - ray_origin;
+
+        // cast ray
+        return ray(ray_origin, ray_direction);
+    }
+
+    // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+    vec3 sample_square() const {
+        return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+    }
+
+    // Given ray position, calculate color of each pixel across screen
     color ray_color(const ray& r, const hittable& world) const {
         hit_record rec;
 
