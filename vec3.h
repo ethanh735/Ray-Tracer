@@ -52,6 +52,15 @@ public:
     double length_squared() const {
         return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
+
+    // random vector generations for surface reflection
+    static vec3 random() {
+        return vec3(random_double(), random_double(), random_double());
+    }
+
+    static vec3 random(double min, double max) {
+        return vec3(random_double(min,max), random_double(min,max), random_double(min,max));
+    }
 };
 
 // just a vec3 alias, useful for geometric clarity in code
@@ -105,6 +114,29 @@ inline vec3 cross(const vec3& u, const vec3& v) {
 
 inline vec3 unit_vector(vec3 v) {
     return v / v.length();
+}
+
+// generates random vectors until one lands within unit sphere (sphere drawn within -1,1 unit cube)
+inline vec3 random_in_unit_sphere() {
+    while (true) {
+        auto p = vec3::random(-1,1);
+        if (p.length_squared() < 1)
+            return p;
+    }
+}
+
+// unit sphere vector normalized to unit length
+inline vec3 random_unit_vector() {
+    return unit_vector(random_in_unit_sphere());
+}
+
+// dot product between unit sphere vector and surface normal to determine whether unit sphere vector is on, or needs to be flipped to, correct hemisphere
+inline vec3 random_on_hemisphere(const vec3& normal) {
+    vec3 on_unit_sphere = random_unit_vector();
+    if (dot(on_unit_sphere, normal) > 0.0)          // In the same hemisphere as the normal
+        return on_unit_sphere;
+    else
+        return -on_unit_sphere;
 }
 
 #endif //VEC3_H

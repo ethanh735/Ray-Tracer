@@ -11,6 +11,7 @@ public:
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
     int samples_per_pixel = 10;
+    int max_depth = 10;             // number of ray bounces into scene: maximum returns no light value
 
     // renders image pixel by pixel
     void render(const hittable& world) {
@@ -27,9 +28,10 @@ public:
                 color pixel_color(0,0,0);
                 // cast multiple rays per pixel, getting a slightly different sample surrounding pixel each time
                 for (int sample = 0; sample < samples_per_pixel; sample++) {
+                    // fire ray, allowing certain number of surface reflections
                     ray r = get_ray(col, row);
                     // total the sample rays collected
-                    pixel_color += ray_color(r, world);
+                    pixel_color += ray_color(r, max_depth, world);
                 }
                 // divide total sampling by the number of samples
                 write_color(std::cout, pixel_samples_scale * pixel_color);
@@ -99,12 +101,17 @@ private:
     }
 
     // Given ray position, calculate color of each pixel across screen
-    color ray_color(const ray& r, const hittable& world) const {
+    color ray_color(const ray& r, int depth, const hittable& world) const {
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if (depth <= 0)
+            return color(0,0,0);
+
         hit_record rec;
 
-        // for given hittable, if hit (according to what hittable is), return color map value
+        // for given hittable, if hit (according to what hittable is), reflect ray randomly and return what color is kept by reflection
         if (world.hit(r, interval(0, infinity), rec)) {
-            return 0.5 * (rec.normal + color(1,1,1));
+            vec3 direction = random_on_hemisphere(rec.normal);
+            return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
         }
 
         // blue to white background lerp:
