@@ -108,9 +108,10 @@ private:
 
         hit_record rec;
 
-        // for given hittable, if hit (according to what hittable is), reflect ray randomly and return what color is kept by reflection
-        if (world.hit(r, interval(0, infinity), rec)) {
+        // for given hittable, if hit (according to what hittable is), reflect ray randomly and return what color is kept by recursive reflection
+        if (world.hit(r, interval(0.001, infinity), rec)) {
             vec3 direction = random_on_hemisphere(rec.normal);
+            // depth # of times, fire ray from hittable (previous hit point) in random direction (away from hemisphere)
             return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
         }
 
