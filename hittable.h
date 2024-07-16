@@ -1,12 +1,14 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
+class material;
 
-// Bundle of data per ray intersection
+// Bundle of data per ray intersection, so bunches of arguments don't need to be passed
 class hit_record {
 public:
     point3 p;
     vec3 normal;
+    shared_ptr<material> mat;       // points to whatever material the hittable that is hit has
     double t;
     bool front_face;
 
