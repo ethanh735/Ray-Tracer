@@ -7,7 +7,7 @@
 class sphere : public hittable {
 public:
     // constructor
-    sphere(const point3& _center, double _radius) : center(_center), radius(fmax(0, _radius)) {/* TODO: Initialize the material pointer `mat` */}
+    sphere(const point3& center, double radius, shared_ptr<material> mat) : center(center), radius(fmax(0,radius)), mat(mat) {}
 
     // defines ray intersection function according to quadratic formula
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {

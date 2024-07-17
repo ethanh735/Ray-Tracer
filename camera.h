@@ -4,6 +4,7 @@
 #include "rtweekend.h"
 
 #include "hittable.h"
+#include "material.h"
 
 class camera {
 public:
@@ -110,9 +111,13 @@ private:
 
         // for given hittable, if hit (according to what hittable is), reflect ray randomly and return what color is kept by recursive reflection
         if (world.hit(r, interval(0.001, infinity), rec)) {
-            vec3 direction = rec.normal + random_unit_vector();
-            // depth # of times, fire ray from hittable (previous hit point) in random direction (away from hemisphere)
-            return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
+            ray scattered;
+            color attenuation;
+            // returns using different behaviors depending on material
+            if (rec.mat->scatter(r, rec, attenuation, scattered))
+                // depth # of times, fire ray from hittable (previous hit point) in direction (from hemisphere) according to material
+                return attenuation * ray_color(scattered, depth-1, world);
+            return color(0,0,0);
         }
 
         // blue to white background lerp:
