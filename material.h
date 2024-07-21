@@ -45,17 +45,37 @@ class metal : public material {
     metal(const color& albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
-        vec3 reflected = reflect(r_in.direction(), rec.normal);         // instead of random reflection angle, exacting reflection
-        reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
+        vec3 reflected = reflect(r_in.direction(), rec.normal);             // instead of random reflection angle, exacting reflection
+        reflected = unit_vector(reflected) + (fuzz * random_unit_vector());    // offset endpoint of reflection by fuzz amount, accounting for (normalizing) reflection distance
 
         scattered = ray(rec.p, reflected);
-        attenuation = albedo;       // how light or dark material is: essentially material color
-        return (dot(scattered.direction(), rec.normal) > 0);
+        attenuation = albedo;                                                     // how light or dark material is: essentially material color
+        return (dot(scattered.direction(), rec.normal) > 0);                // returns true if reflection is away from object (absorbs scattering below surface)
     }
 
   private:
     color albedo;
     double fuzz;
+};
+
+class dielectric : public material {
+public:
+    dielectric(double refraction_index) : refraction_index(refraction_index) {}
+
+    bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
+        attenuation = color(1.0, 1.0, 1.0);
+        double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;         // refraction index is either itself, or ratio of this material and material its enclosed in
+
+        vec3 unit_direction = unit_vector(r_in.direction());
+        vec3 refracted = refract(unit_direction, rec.normal, ri);   // dot product simplified by input ray being unit vector
+
+        scattered = ray(rec.p, refracted);
+        return true;
+    }
+
+private:
+    // Refractive index in vacuum or air, or the ratio of the material's refractive index over the refractive index of the enclosing media
+    double refraction_index;
 };
 
 #endif
