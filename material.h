@@ -63,13 +63,26 @@ public:
     dielectric(double refraction_index) : refraction_index(refraction_index) {}
 
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
-        attenuation = color(1.0, 1.0, 1.0);
+        attenuation = color(1.0, 1.0, 1.0);                                 // glass doesn't absorb rays
         double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;         // refraction index is either itself, or ratio of this material and material its enclosed in
 
         vec3 unit_direction = unit_vector(r_in.direction());
-        vec3 refracted = refract(unit_direction, rec.normal, ri);   // dot product simplified by input ray being unit vector
 
-        scattered = ray(rec.p, refracted);
+        double cos_theta = fmin(dot(-unit_direction, rec.normal), 1.0);          // -R * n
+        double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+
+        vec3 direction;
+
+        if (ri * sin_theta > 1.0) {
+            // Must Reflect: total internal reflection, n1/n2 * sin(theta_1) too great for refracted angle to exit surface
+            direction = reflect(unit_direction, rec.normal);
+        }
+        else {
+            // Can Refract
+            direction = refract(unit_direction, rec.normal, ri);    // dot product simplified by input ray being unit vector
+        }
+
+        scattered = ray(rec.p, direction);
         return true;
     }
 

@@ -14,7 +14,10 @@ int main() {
     // Material Generation
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));                   // greenish
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));                   // mild blue
-    auto material_left   = make_shared<dielectric>(1.50);                                         // glass
+    // Glass modeling behavior: total external reflection
+    // If a shallow ray is fired at glass, it is reflected.
+    // If a relatively straight-on ray is fired, it is refracted, with theta prime (refracted angle) being greater than theta (incident angle).
+    auto material_left   = make_shared<dielectric>(1/1.33);                                       // glass
     auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);                  // fairly fuzzy gold
 
     // Sphere Generation
