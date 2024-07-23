@@ -14,6 +14,8 @@ public:
     int samples_per_pixel = 10;
     int max_depth = 10;             // number of ray bounces into scene: maximum returns no light value
 
+    double v_fov = 90;              // vertical field of view
+
     // renders image pixel by pixel
     void render(const hittable& world) {
         initialize();
@@ -60,7 +62,9 @@ private:
 
         // Viewport Calculation:
         auto focal_length = 1.0;                                                            // distance between viewport and camera center
-        auto viewport_height = 2.0;                                                         // arbitrary
+        auto theta = degrees_to_radians(v_fov);
+        auto h = tan(theta/2);                                                              // height between viewport center (line from camera to viewport) and viewport edge (fov angle)
+        auto viewport_height = 2 * h * focal_length;                                        // fov at distance of viewport
         auto viewport_width = viewport_height * (double(image_width)/image_height);         // recalculation of aspect ratio based on approximated values: both image width and height are ints, division result must be double
 
         auto center = point3(0, 0, 0);                                                  // zeroed for simplicity
