@@ -120,6 +120,15 @@ inline vec3 unit_vector(vec3 v) {
     return v / v.length();
 }
 
+// generates random vectors until one lands within unit circle (-1,1 on only x and y axes)
+inline vec3 random_in_unit_disk() {
+    while (true) {
+        auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
+        if (p.length_squared() < 1)
+            return p;
+    }
+}
+
 // generates random vectors until one lands within unit sphere (sphere drawn within -1,1 unit cube)
 inline vec3 random_in_unit_sphere() {
     while (true) {

@@ -12,12 +12,15 @@ public:
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
     int samples_per_pixel = 10;
-    int max_depth = 10;             // number of ray bounces into scene: maximum returns no light value
+    int max_depth = 10;                                     // number of ray bounces into scene: maximum returns no light value
 
-    double v_fov = 90;              // vertical field of view
-    point3 lookfrom = point3(0,0,0);   // Point camera is looking from
-    point3 lookat   = point3(0,0,-1);  // Point camera is looking at
-    vec3   vup      = vec3(0,1,0);     // absolute "up" direction, camera-relative
+    double v_fov = 90;                                      // vertical field of view
+    point3 lookfrom = point3(0,0,0);            // Point camera is looking from
+    point3 lookat   = point3(0,0,-1);           // Point camera is looking at
+    vec3   vup      = vec3(0,1,0);              // absolute "up" direction, camera-relative
+
+    double defocus_angle = 0;                               // Variation angle of rays through each pixel
+    double focus_dist = 10;                                 // Distance between camera lookfrom point (camera center) to plane of perfect focus (viewport)
 
     // renders image pixel by pixel
     void render(const hittable& world) {
@@ -55,6 +58,8 @@ private:
     vec3   pixel_delta_u;        // Offset to pixel to the right
     vec3   pixel_delta_v;        // Offset to pixel below
     vec3   u, v, w;              // Camera frame basis vectors: camera right, camera up, direction of lookat to camera, respectively
+    vec3   defocus_disk_u;       // Defocus disk horizontal radius
+    vec3   defocus_disk_v;       // Defocus disk vertical radius
 
     void initialize() {
         // Given width and aspect ratio, calculate image height (at least 1)
@@ -67,11 +72,10 @@ private:
         center = lookfrom;
 
         // Viewport Calculation:
-        auto focal_length = (lookfrom - lookat).length();                                   // distance between viewport and camera center
         auto theta = degrees_to_radians(v_fov);
-        auto h = tan(theta/2);                                                              // height between viewport center (line from camera to viewport) and viewport edge (fov angle)
-        auto viewport_height = 2 * h * focal_length;                                        // fov at distance of viewport
-        auto viewport_width = viewport_height * (double(image_width)/image_height);         // recalculation of aspect ratio based on approximated values: both image width and height are ints, division result must be double
+        auto h = tan(theta/2);                                                       // height between viewport center (line from camera to viewport) and viewport edge (fov angle)
+        auto viewport_height = 2 * h * focus_dist;                                   // fov at distance of viewport
+        auto viewport_width = viewport_height * (double(image_width)/image_height);  // recalculation of aspect ratio based on approximated values: both image width and height are ints, division result must be double
 
         // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
         w = unit_vector(lookfrom - lookat);
@@ -87,12 +91,17 @@ private:
         pixel_delta_v = viewport_v / image_height;
 
         // Calculate the absolute location of the upper left pixel: {0,0,0} - {0,0,1} is viewport, over and up to corner
-        auto viewport_upper_left = center - (focal_length * w) - viewport_u/2 - viewport_v/2;
+        auto viewport_upper_left = center - (focus_dist * w) - viewport_u/2 - viewport_v/2;
         // offset to center ray within viewport pixel: 1/2 pixel size over and down
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        // Calculate the camera defocus disk basis vectors.
+        auto defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2));  // similar to calculation of height between viewport center and edge given fov: defocus amount determines disk size
+        defocus_disk_u = u * defocus_radius;
+        defocus_disk_v = v * defocus_radius;
     }
 
-    // Construct a camera ray originating from the origin and directed at randomly sample point around the pixel location i, j.
+    // Construct a camera ray originating from the defocus disk and directed at randomly sample point around the pixel location i, j.
     ray get_ray(int i, int j) const {
         // generates a sample within a square of size -0.5,0.5
         auto offset = sample_square();
@@ -102,7 +111,7 @@ private:
                             + ((j + offset.y()) * pixel_delta_v);
 
         // exacting vector between current viewport position and camera
-        auto ray_origin = center;
+        auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
         auto ray_direction = pixel_sample - ray_origin;
 
         // cast ray
@@ -112,6 +121,12 @@ private:
     // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
     vec3 sample_square() const {
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+    }
+
+    // Returns a random point in the camera defocus disk.
+    point3 defocus_disk_sample() const {
+        auto p = random_in_unit_disk();
+        return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);      // unit vector multiplied by disk size
     }
 
     // Given ray position, calculate color of each pixel across screen
