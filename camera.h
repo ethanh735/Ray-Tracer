@@ -15,6 +15,9 @@ public:
     int max_depth = 10;             // number of ray bounces into scene: maximum returns no light value
 
     double v_fov = 90;              // vertical field of view
+    point3 lookfrom = point3(0,0,0);   // Point camera is looking from
+    point3 lookat   = point3(0,0,-1);  // Point camera is looking at
+    vec3   vup      = vec3(0,1,0);     // absolute "up" direction, camera-relative
 
     // renders image pixel by pixel
     void render(const hittable& world) {
@@ -51,6 +54,7 @@ private:
     point3 pixel00_loc;          // Location of pixel 0, 0
     vec3   pixel_delta_u;        // Offset to pixel to the right
     vec3   pixel_delta_v;        // Offset to pixel below
+    vec3   u, v, w;              // Camera frame basis vectors: camera right, camera up, direction of lookat to camera, respectively
 
     void initialize() {
         // Given width and aspect ratio, calculate image height (at least 1)
@@ -60,25 +64,30 @@ private:
         // pixels per sample
         pixel_samples_scale = 1.0 / samples_per_pixel;
 
+        center = lookfrom;
+
         // Viewport Calculation:
-        auto focal_length = 1.0;                                                            // distance between viewport and camera center
+        auto focal_length = (lookfrom - lookat).length();                                   // distance between viewport and camera center
         auto theta = degrees_to_radians(v_fov);
         auto h = tan(theta/2);                                                              // height between viewport center (line from camera to viewport) and viewport edge (fov angle)
         auto viewport_height = 2 * h * focal_length;                                        // fov at distance of viewport
         auto viewport_width = viewport_height * (double(image_width)/image_height);         // recalculation of aspect ratio based on approximated values: both image width and height are ints, division result must be double
 
-        auto center = point3(0, 0, 0);                                                  // zeroed for simplicity
+        // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+        w = unit_vector(lookfrom - lookat);
+        u = unit_vector(cross(vup, w));
+        v = cross(w, u);
 
         // Calculate vectors across viewport edges: viewport size per edge
-        auto viewport_u = vec3(viewport_width, 0, 0);
-        auto viewport_v = vec3(0, -viewport_height, 0);
+        vec3 viewport_u = viewport_width * u;       // Vector across viewport horizontal edge
+        vec3 viewport_v = viewport_height * -v;     // Vector down viewport vertical edge
 
         // Vectors of distance between adjacent pixels: pixel size per edge
         pixel_delta_u = viewport_u / image_width;
         pixel_delta_v = viewport_v / image_height;
 
         // Calculate the absolute location of the upper left pixel: {0,0,0} - {0,0,1} is viewport, over and up to corner
-        auto viewport_upper_left = center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+        auto viewport_upper_left = center - (focal_length * w) - viewport_u/2 - viewport_v/2;
         // offset to center ray within viewport pixel: 1/2 pixel size over and down
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     }
