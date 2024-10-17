@@ -1,8 +1,10 @@
+SRCS = $(shell find ./ -type f -name *.cpp)
+
 all:
-	g++ -std=c++20 -g ./*.cpp -Wall -O2 -o raytrace;
+	g++ -std=c++20 -g $(SRCS) -Wall -O2 -o raytrace;
 
 run:
-	./raytrace > outputs/14.1.ppm;
+	./raytrace > outputs/book2/2.6.ppm;
 
 clean:
 	rm -f raytrace;
